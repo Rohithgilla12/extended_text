@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:extended_text_library/extended_text_library.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -21,8 +22,7 @@ class MyTextSelectionControls extends TextSelectionControls {
   final bool joinZeroWidthSpace;
 
   @override
-  void handleCopy(TextSelectionDelegate delegate,
-      ClipboardStatusNotifier? clipboardStatus) {
+  void handleCopy(TextSelectionDelegate delegate, [ClipboardStatusNotifier? clipboardStatus]) {
     final TextEditingValue value = delegate.textEditingValue;
 
     String data = value.selection.textInside(value.text);
@@ -47,8 +47,7 @@ class MyTextSelectionControls extends TextSelectionControls {
 
   /// Returns the size of the Material handle.
   @override
-  Size getHandleSize(double textLineHeight) =>
-      const Size(_kHandleSize, _kHandleSize);
+  Size getHandleSize(double textLineHeight) => const Size(_kHandleSize, _kHandleSize);
 
   /// Builder for material-style copy/paste text selection toolbar.
   @override
@@ -59,7 +58,7 @@ class MyTextSelectionControls extends TextSelectionControls {
     Offset selectionMidpoint,
     List<TextSelectionPoint> endpoints,
     TextSelectionDelegate delegate,
-    ClipboardStatusNotifier clipboardStatus,
+    ClipboardStatusNotifier? clipboardStatus,
     Offset? lastSecondaryTapDownPosition,
   ) {
     return _TextSelectionControlsToolbar(
@@ -68,32 +67,22 @@ class MyTextSelectionControls extends TextSelectionControls {
       selectionMidpoint: selectionMidpoint,
       endpoints: endpoints,
       delegate: delegate,
-      clipboardStatus: clipboardStatus,
-      handleCut:
-          canCut(delegate) ? () => handleCut(delegate, clipboardStatus) : null,
-      handleCopy: canCopy(delegate)
-          ? () => handleCopy(delegate, clipboardStatus)
-          : null,
+      clipboardStatus: clipboardStatus!,
+      handleCut: canCut(delegate) ? () => handleCut(delegate, clipboardStatus) : null,
+      handleCopy: canCopy(delegate) ? () => handleCopy(delegate, clipboardStatus) : null,
       handlePaste: canPaste(delegate) ? () => handlePaste(delegate) : null,
-      handleSelectAll:
-          canSelectAll(delegate) ? () => handleSelectAll(delegate) : null,
+      handleSelectAll: canSelectAll(delegate) ? () => handleSelectAll(delegate) : null,
       handleLike: () {
-        launch(
-            'mailto:zmtzawqlp@live.com?subject=extended_text_share&body=${delegate.textEditingValue.text}');
+        launch('mailto:zmtzawqlp@live.com?subject=extended_text_share&body=${delegate.textEditingValue.text}');
         delegate.hideToolbar();
-        delegate.userUpdateTextEditingValue(
-            delegate.textEditingValue
-                .copyWith(selection: const TextSelection.collapsed(offset: 0)),
-            SelectionChangedCause.toolbar);
+        delegate.userUpdateTextEditingValue(delegate.textEditingValue.copyWith(selection: const TextSelection.collapsed(offset: 0)), SelectionChangedCause.toolbar);
       },
     );
   }
 
   /// Builder for material-style text selection handles.
   @override
-  Widget buildHandle(
-      BuildContext context, TextSelectionHandleType type, double textLineHeight,
-      [VoidCallback? onTap, double? startGlyphHeight, double? endGlyphHeight]) {
+  Widget buildHandle(BuildContext context, TextSelectionHandleType type, double textLineHeight, [VoidCallback? onTap, double? startGlyphHeight, double? endGlyphHeight]) {
     final Widget handle = SizedBox(
       width: _kHandleSize,
       height: _kHandleSize,
@@ -126,8 +115,7 @@ class MyTextSelectionControls extends TextSelectionControls {
   /// See [TextSelectionControls.getHandleAnchor].
 
   @override
-  Offset getHandleAnchor(TextSelectionHandleType type, double textLineHeight,
-      [double? startGlyphHeight, double? endGlyphHeight]) {
+  Offset getHandleAnchor(TextSelectionHandleType type, double textLineHeight, [double? startGlyphHeight, double? endGlyphHeight]) {
     switch (type) {
       case TextSelectionHandleType.left:
         return const Offset(_kHandleSize, 0);
@@ -143,10 +131,7 @@ class MyTextSelectionControls extends TextSelectionControls {
     // Android allows SelectAll when selection is not collapsed, unless
     // everything has already been selected.
     final TextEditingValue value = delegate.textEditingValue;
-    return delegate.selectAllEnabled &&
-        value.text.isNotEmpty &&
-        !(value.selection.start == 0 &&
-            value.selection.end == value.text.length);
+    return delegate.selectAllEnabled && value.text.isNotEmpty && !(value.selection.start == 0 && value.selection.end == value.text.length);
   }
 }
 
@@ -191,12 +176,10 @@ class _TextSelectionControlsToolbar extends StatefulWidget {
   final double textLineHeight;
 
   @override
-  _TextSelectionControlsToolbarState createState() =>
-      _TextSelectionControlsToolbarState();
+  _TextSelectionControlsToolbarState createState() => _TextSelectionControlsToolbarState();
 }
 
-class _TextSelectionControlsToolbarState
-    extends State<_TextSelectionControlsToolbar> with TickerProviderStateMixin {
+class _TextSelectionControlsToolbarState extends State<_TextSelectionControlsToolbar> with TickerProviderStateMixin {
   void _onChangedClipboardStatus() {
     setState(() {
       // Inform the widget that the value of clipboardStatus has changed.
@@ -233,45 +216,32 @@ class _TextSelectionControlsToolbarState
   @override
   Widget build(BuildContext context) {
     // If there are no buttons to be shown, don't render anything.
-    if (widget.handleCut == null &&
-        widget.handleCopy == null &&
-        widget.handlePaste == null &&
-        widget.handleSelectAll == null) {
+    if (widget.handleCut == null && widget.handleCopy == null && widget.handlePaste == null && widget.handleSelectAll == null) {
       return const SizedBox.shrink();
     }
     // If the paste button is desired, don't render anything until the state of
     // the clipboard is known, since it's used to determine if paste is shown.
-    if (widget.handlePaste != null &&
-        widget.clipboardStatus.value == ClipboardStatus.unknown) {
+    if (widget.handlePaste != null && widget.clipboardStatus.value == ClipboardStatus.unknown) {
       return const SizedBox.shrink();
     }
 
     // Calculate the positioning of the menu. It is placed above the selection
     // if there is enough room, or otherwise below.
     final TextSelectionPoint startTextSelectionPoint = widget.endpoints[0];
-    final TextSelectionPoint endTextSelectionPoint =
-        widget.endpoints.length > 1 ? widget.endpoints[1] : widget.endpoints[0];
-    final Offset anchorAbove = Offset(
-        widget.globalEditableRegion.left + widget.selectionMidpoint.dx,
-        widget.globalEditableRegion.top +
-            startTextSelectionPoint.point.dy -
-            widget.textLineHeight -
-            _kToolbarContentDistance);
+    final TextSelectionPoint endTextSelectionPoint = widget.endpoints.length > 1 ? widget.endpoints[1] : widget.endpoints[0];
+    final Offset anchorAbove =
+        Offset(widget.globalEditableRegion.left + widget.selectionMidpoint.dx, widget.globalEditableRegion.top + startTextSelectionPoint.point.dy - widget.textLineHeight - _kToolbarContentDistance);
     final Offset anchorBelow = Offset(
       widget.globalEditableRegion.left + widget.selectionMidpoint.dx,
-      widget.globalEditableRegion.top +
-          endTextSelectionPoint.point.dy +
-          _kToolbarContentDistanceBelow,
+      widget.globalEditableRegion.top + endTextSelectionPoint.point.dy + _kToolbarContentDistanceBelow,
     );
 
     // Determine which buttons will appear so that the order and total number is
     // known. A button's position in the menu can slightly affect its
     // appearance.
     assert(debugCheckHasMaterialLocalizations(context));
-    final MaterialLocalizations localizations =
-        MaterialLocalizations.of(context);
-    final List<_TextSelectionToolbarItemData> itemDatas =
-        <_TextSelectionToolbarItemData>[
+    final MaterialLocalizations localizations = MaterialLocalizations.of(context);
+    final List<_TextSelectionToolbarItemData> itemDatas = <_TextSelectionToolbarItemData>[
       if (widget.handleCut != null)
         _TextSelectionToolbarItemData(
           label: localizations.cutButtonLabel,
@@ -282,8 +252,7 @@ class _TextSelectionControlsToolbarState
           label: localizations.copyButtonLabel,
           onPressed: widget.handleCopy,
         ),
-      if (widget.handlePaste != null &&
-          widget.clipboardStatus.value == ClipboardStatus.pasteable)
+      if (widget.handlePaste != null && widget.clipboardStatus.value == ClipboardStatus.pasteable)
         _TextSelectionToolbarItemData(
           label: localizations.pasteButtonLabel,
           onPressed: widget.handlePaste,
@@ -307,17 +276,11 @@ class _TextSelectionControlsToolbarState
     return TextSelectionToolbar(
       anchorAbove: anchorAbove,
       anchorBelow: anchorBelow,
-      children: itemDatas
-          .asMap()
-          .entries
-          .map((MapEntry<int, _TextSelectionToolbarItemData> entry) {
+      children: itemDatas.asMap().entries.map((MapEntry<int, _TextSelectionToolbarItemData> entry) {
         return TextSelectionToolbarTextButton(
-          padding: TextSelectionToolbarTextButton.getPadding(
-              entry.key, itemDatas.length),
+          padding: TextSelectionToolbarTextButton.getPadding(entry.key, itemDatas.length),
           onPressed: entry.value.onPressed,
-          child: entry.value.label == 'like'
-              ? const Icon(Icons.favorite)
-              : Text(entry.value.label),
+          child: entry.value.label == 'like' ? const Icon(Icons.favorite) : Text(entry.value.label),
         );
       }).toList(),
     );

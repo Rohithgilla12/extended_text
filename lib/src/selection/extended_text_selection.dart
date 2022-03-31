@@ -793,6 +793,12 @@ class ExtendedTextSelectionState extends State<ExtendedTextSelection>
 
     return false;
   }
+
+  @override
+  void insertTextPlaceholder(Size size) {}
+
+  @override
+  void removeTextPlaceholder() {}
 }
 
 class _CopySelectionAction extends ContextAction<CopySelectionTextIntent> {
